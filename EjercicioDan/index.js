@@ -2,61 +2,56 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const { SerialPort, ReadlineParser } = require('serialport');
-const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const PORT = 5000;
-
-
-app.use(cors());
-app.use('/client', express.static(__dirname + '/public'));
+app.use(express.static(`${__dirname}/public`));
 app.use(express.json());
 
+const PORT = 3000;
+let counter = 0;
+
+app.get('/counter', (req, res) => {
+    res.json({ counter });
+});
+// SOCKET ****************************************************
+
 io.on('connection', (socket) => {
-    console.log('Client connected');
+    console.log('Un cliente se ha conectado');
+
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('Un cliente se ha desconectado');
     });
 });
 
-
-// Create a port
+// SERIAL PORT ***********************************************
 const port = new SerialPort({
     path: 'COM5',
     baudRate: 9600,
 });
 
-// Create a parser: eso es pa eso de los saltos de línea que se envían desde el Arduino
 const parser = new ReadlineParser({ delimiter: '\r\n' });
 port.pipe(parser);
 
-let counter = 0;
-
-
 parser.on('data', (data) => {
-    console.log('Data:', data);
-
     if (String(data).includes('COUNTER')) {
         const number = parseInt(data.split(':')[1]);
-        console.log('Number: ' + number);
         counter = number;
+        console.log('Counter:', counter);
+
+        io.emit('counter', counter);
     }
 });
 
-
-app.get('/counter', (req, res) => {    
-    res.json({ response: counter });
-});
-
-
-// detect errors
 port.on('error', (err) => {
     console.log('Error: ', err.message);
 });
 
-app.listen(PORT, () => {
+
+// SERVER ***************************************************
+
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

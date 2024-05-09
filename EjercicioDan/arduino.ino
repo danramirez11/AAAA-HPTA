@@ -1,25 +1,9 @@
-String uuid = "A";
-
-#define DEBUG false
-
 int button = 13;
 int counter = 0;
 
 void setup() {  
-  setPinMode();
-  Serial.begin(9600);
-  delay(1000);
-
-  #if (DEBUG)
-    Serial.println(uuid + ":RUNNING_DEV_MODE");
-  #else
-    Serial.println(uuid + ":RUNNING_PROD_MODE");
-  #endif
-    Serial.flush();
-}
-
-void setPinMode() {
   pinMode(button, INPUT);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -29,7 +13,7 @@ void loop() {
           Serial.println("COUNTER:" + String(counter));
   }
 
-  if (Serial.available()) {
+  /*if (Serial.available()) {
     Serial.flush();
     String message = Serial.readStringUntil('\n');
     message.trim();
@@ -48,6 +32,6 @@ void loop() {
     }
 
     delay(200);
-  }
+  }*/
   delay(200);
 }
